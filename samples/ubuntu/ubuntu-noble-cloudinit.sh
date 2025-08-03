@@ -1,7 +1,7 @@
 #! /bin/bash
 
 VMID=8200
-STORAGE=local-zfs
+STORAGE=NetAppPool3
 
 set -x
 rm -f noble-server-cloudimg-amd64.img
@@ -16,6 +16,7 @@ sudo qm create $VMID --name "ubuntu-noble-template" --ostype l26 \
     --vga serial0 --serial0 socket  \
     --net0 virtio,bridge=vmbr0
 sudo qm importdisk $VMID noble-server-cloudimg-amd64.img $STORAGE
+sudo qm set $VMID --serial0 socket --vga serial0
 sudo qm set $VMID --scsihw virtio-scsi-pci --virtio0 $STORAGE:vm-$VMID-disk-1,discard=on
 sudo qm set $VMID --boot order=virtio0
 sudo qm set $VMID --scsi1 $STORAGE:cloudinit
@@ -29,7 +30,6 @@ runcmd:
     - reboot
 # Taken from https://forum.proxmox.com/threads/combining-custom-cloud-init-with-auto-generated.59008/page-3#post-428772
 EOF
-
 sudo qm set $VMID --cicustom "vendor=local:snippets/ubuntu.yaml"
 sudo qm set $VMID --tags ubuntu-template,noble,cloudinit
 sudo qm set $VMID --ciuser $USER
